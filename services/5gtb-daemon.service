@@ -1,0 +1,11 @@
+[Unit]
+Description=Daemon for executing the 5G Testbed scripts on startup, after establishing an internet connection.
+Requires=wait-for-network.service
+After=wait-for-network.service
+
+[Service]
+ExecStart=/home/<USER>/5gtb-rpi/startup/5gtb_startup.sh
+User=<USER>
+
+[Install]
+WantedBy=multi-user.target

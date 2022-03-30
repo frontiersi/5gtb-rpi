@@ -1,0 +1,10 @@
+[Unit]
+Description=Ping a server on the internet until it becomes reachable.
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'while ! ping -c1 frontiersi.com.au; do sleep 1; done'
+TimeoutStartSec=300s
+
+[Install]
+WantedBy=multi-user.target
