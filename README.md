@@ -99,6 +99,14 @@ $HOME/5gtb-rpi/deploy_services.sh
 
 The scripts are executed at startup, so they should work when the RaspberryPi is booted.
 
+Alternatively, the startup script can be run manually, which may be useful for development or debugging.
+
+**Note:** The systemd services should be disabled if running manually, as the output NMEA stream from the serial port will be partially populating multiple files, making the output NMEA files unreadable.
+
+```console
+$HOME/5gtb-rpi/startup/5gtb_startup.sh
+```
+
 ### Accessing Data
 
 NMEA (`.nmea`) and RTCM (`.rtcm`) files can be found in the `$HOME/output` folder.
