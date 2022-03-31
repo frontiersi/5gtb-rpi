@@ -8,6 +8,17 @@ source config.cfg
 # Get this scripts absolute path
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 
+# Check if the services are already active and disable if they are
+if (systemctl -q is-active wait-for-network.service) || (systemctl -q is-active 5gtb-daemon.service); then
+    # Disable services
+    sudo systemctl disable wait-for-network.service
+    sudo systemctl disable 5gtb-daemon.service
+
+    # Stop services
+    sudo systemctl stop wait-for-network.service
+    sudo systemctl stop 5gtb-daemon.service
+fi
+
 # Copy systemd services
 echo "Copying systemd services to /lib/systemd/system/..."
 sudo cp $SCRIPT_DIR/services/5gtb-daemon.service /lib/systemd/system/
