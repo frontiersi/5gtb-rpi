@@ -26,7 +26,7 @@ if [ ${mode} = "positioning" ]; then
 
     # Save NMEA messages from serial port to file
     echo "Logging ${serial_port} to $HOME/output/`date +"%Y%m%d-%H%M%S"`.nmea"
-    cat "${serial_port}" > $HOME/output/`date +"%Y%m%d-%H%M%S"`.nmea &
+    exec cat "${serial_port}" > $HOME/output/`date +"%Y%m%d-%H%M%S"`.nmea &
 
     # Execute supl client, get corrections from location server and stream RTCM to serial port
     echo "Executing SUPL LPP Client"
@@ -39,5 +39,8 @@ if [ ${mode} = "correction" ]; then
 
     # Execute supl client, save RTCM to file and stream RTCM to serial port
     echo "Executing SUPL LPP Client"
-    exec supl-lpp-client -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} -d ${serial_port} -x $HOME/output/`date +"%Y%m%d-%H%M%S"`.rtcm &
+    exec supl-lpp-client -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} -d ${serial_port} -x $HOME/output/`date +"%Y%m%d-%H%M%S"`.rtcm
 fi
+
+# Kill background jobs on exit
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
