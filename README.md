@@ -97,7 +97,7 @@ $HOME/5gtb-rpi/deploy_services.sh
 
 ## Usage
 
-The scripts are executed at startup, so they should work when the RaspberryPi is booted.
+The systemd services execute the scripts at startup, so they should work when the RaspberryPi is booted.
 
 Alternatively, the startup script can be run manually, which may be useful for development or debugging.
 
