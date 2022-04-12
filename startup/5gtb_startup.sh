@@ -2,6 +2,9 @@
 #
 # Execute the SUPL client, stream NMEA and RTCM to serial port and log to file.
 
+# Set timezone for date command
+export TZ=Australia/Sydney
+
 # Kill script if a command returns a non-zero status (error)
 set -e
 
