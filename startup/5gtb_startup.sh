@@ -66,6 +66,9 @@ if [ ${mode} = "correction" ]; then
     supl-lpp-client \
         -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
         -d ${serial_port} \
-        -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm > \
-        ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log
+        -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
+        # Prepend UTC timestamps to log file
+        while IFS= read -r line; do 
+            printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$line";
+        done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
 fi
