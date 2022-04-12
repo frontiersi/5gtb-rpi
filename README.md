@@ -19,7 +19,13 @@ git clone https://github.com/frontiersi/5gtb-rpi.git
 
 ### 2. Install dependencies
 
-The startup scripts require the [SUPL LPP Client](https://github.com/frontiersi/supl-lpp-client) to connect to a location server and generate RTCM from LPP messages.
+The scripts require `stty` from coreutils and `str2str` from RTKLIB:
+
+```console
+sudo apt install coreutils rtklib
+```
+
+The startup scripts also require the [SUPL LPP Client](https://github.com/frontiersi/supl-lpp-client) to connect to a location server and generate RTCM from LPP messages.
 
 Install it by following the instructions in the [GitHub Repository](https://github.com/frontiersi/supl-lpp-client/tree/main#installation).
 
@@ -48,7 +54,7 @@ user=pi                     # Username for executing as user in service
 
 Determines how the script should operate given the hardware configuration, there are two modes:
 
-1. `positioning`: Executes the SUPL LPP Client which outputs RTCM corrections to the serial port and a file, and logs NMEA from the serial port to a file. Use when a RaspberryPi GNSS HAT is connected.
+1. `positioning`: Executes the SUPL LPP Client which outputs RTCM corrections to the serial port and a file, and logs NMEA from the serial port to a file and streams to a TCP server. Use when a RaspberryPi GNSS HAT is connected.
 2. `correction`: Executes the SUPL LPP Client which outputs RTCM corrections to a serial port, and saves output RTCM messages to a file. Use when an independent GNSS receiver is connected by serial port.
 
 ```text
@@ -72,7 +78,7 @@ Determines the output directory to log data to.
 
 ```text
 # Output Directory
-output_dir=                 # Directory for output NMEA/RTCM and log files
+output_dir=~/output/        # Directory for output NMEA/RTCM and log files
 ```
 
 #### Location Server
@@ -108,17 +114,19 @@ $HOME/5gtb-rpi/deploy_services.sh
 
 The systemd services execute the scripts at startup, so they should work when the RaspberryPi is booted.
 
-Alternatively, the startup script can be run manually, which may be useful for development or debugging.
-
-**Note:** The systemd services should be disabled if running manually, as the output NMEA stream from the serial port will be partially populating multiple files, making the output NMEA files unreadable.
+Alternatively, the startup script can be run manually, which may be useful for development or debugging:
 
 ```console
 $HOME/5gtb-rpi/startup/5gtb_startup.sh
 ```
 
+**Note:** The systemd services should be disabled when running manually, as the serial port will be already in use.
+
 ### Accessing Data
 
-NMEA (`.nmea`) and RTCM (`.rtcm`) files can be found in the folder set in [Output Directory](#output-directory).
+NMEA (`.nmea`) and RTCM (`.rtcm`) files logged by the services can be found in the folder set in the [Output Directory](#output-directory) config.
+
+When the services are running, NMEA messages are also streamed over a TCP server on port `29471`. The stream can be interfaced over the net with `netcat`, `gpsd`, or similar.
 
 ### Data Timezone
 
@@ -136,7 +144,7 @@ To access the logs of a session, you can do so through `journalctl`:
 journalctl -u 5gtb-daemon.service
 ```
 
-Logs of the SUPL LPP client (`.log`) stdout are also saved to file in the folder set in [Output Directory](#output-directory).
+Logs of the SUPL LPP client stdout (`.log`) are also saved to file in the folder set in the [Output Directory](#output-directory) config.
 
 ### Disabling systemd services
 
@@ -147,7 +155,3 @@ To stop the daemon run:
 ```console
 $HOME/5gtb-rpi/disable_services.sh
 ```
-
-### Modifying startup scripts
-
-The daemon should be pre-configured for your specific demonstrator project. However, if you need to modify how the daemon initialises the startup script you can do so by ...
