@@ -66,6 +66,15 @@ serial_port=/dev/ttyAMA0    # Device serial port
 baud_rate=115200            # Device baud rate
 ```
 
+#### Output Directory
+
+Determines the output directory to log data to.
+
+```text
+# Output Directory
+output_dir=                 # Directory for output NMEA/RTCM and log files
+```
+
 #### Location Server
 
 Determines the location server network parameters. Sample parameters are provided in the example below.
@@ -109,7 +118,11 @@ $HOME/5gtb-rpi/startup/5gtb_startup.sh
 
 ### Accessing Data
 
-NMEA (`.nmea`) and RTCM (`.rtcm`) files can be found in the `$HOME/output` folder.
+NMEA (`.nmea`) and RTCM (`.rtcm`) files can be found in the folder set in [Output Directory](#output-directory).
+
+### Data Timezone
+
+NMEA (`.nmea`) and RTCM (`.rtcm`) files are named with an ISO time date format (`YYYYMMDD-hhmmss`). These timestamps are in the Australian Eastern Standard Time (AEST) timezone. Please note that the timestamps in the NMEA data is in the Coordinated Universal Time (UTC) timezone.
 
 ---
 
@@ -122,6 +135,8 @@ To access the logs of a session, you can do so through `journalctl`:
 ```console
 journalctl -u 5gtb-daemon.service
 ```
+
+Logs of the SUPL LPP client (`.log`) stdout are also saved to file in the folder set in [Output Directory](#output-directory).
 
 ### Disabling systemd services
 
