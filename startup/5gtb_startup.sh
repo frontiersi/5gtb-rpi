@@ -43,7 +43,7 @@ if [ ${mode} = "positioning" ]; then
         -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
         # Prepend UTC timestamps to log file
         while IFS= read -r line; do 
-            printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$line";
+            printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
         done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
 
     # Save NMEA to file, start TCP server
@@ -61,6 +61,10 @@ fi
 if [ ${mode} = "correction" ]; then
     echo "Starting correction mode"
 
+    # Configure serial port
+    echo "Configuring serial port ${serial_port}"
+    stty -F ${serial_port} ${baud_rate} -echo
+
     # Execute supl client, save RTCM to file and stream RTCM to serial port
     echo "Executing SUPL LPP Client"
     echo "Streaming RTCM to ${serial_port}"
@@ -68,10 +72,10 @@ if [ ${mode} = "correction" ]; then
         "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
     supl-lpp-client \
         -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
-        -d ${serial_port} \
+        -d ${serial_port} -r ${baud_rate} \
         -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
         # Prepend UTC timestamps to log file
         while IFS= read -r line; do 
-            printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$line";
-        done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
+            printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
+        done | tee ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log
 fi
