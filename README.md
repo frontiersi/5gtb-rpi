@@ -59,17 +59,18 @@ Determines how the script should operate given the hardware configuration, there
 
 ```text
 # Script mode
-mode=positioning            # Operation mode (positioning or correction)
+mode=positioning                # Operation mode (positioning or correction)
 ```
 
-#### Output Device
+#### GNSS Device
 
-Determines the output device to stream RTCM to, and log NMEA from (if in `positioning` mode).
+Determines the GNSS device to stream RTCM to, and log NMEA from (if in `positioning` mode). An optional USB serial port is also provided for SBF (raw GNSS data) logging, leave blank if not required.
 
 ```text
-# Output Device
-serial_port=/dev/ttyAMA0    # Device serial port
-baud_rate=115200            # Device baud rate
+# GNSS Device                   
+uart_serial_port=/dev/ttyAMA0   # GNSS device UART serial port
+usb_serial_port=/dev/ttyACM0    # (Optional) GNSS device USB serial port
+baud_rate=115200                # Device baud rate
 ```
 
 #### Output Directory
@@ -78,7 +79,7 @@ Determines the output directory to log data to.
 
 ```text
 # Output Directory
-output_dir=~/output/        # Directory for output NMEA/RTCM and log files
+output_dir=~/output/            # Directory for output NMEA/RTCM/SBF and log files
 ```
 
 #### Location Server
@@ -87,12 +88,12 @@ Determines the location server network parameters. Sample parameters are provide
 
 ```text
 # Location Server
-host=192.0.2.1              # Location server hostname or IP
-port=1000                   # Location server port
-mcc=001                     # Location server mobile country code
-mnc=1                       # Location server mobile network code
-tac=1                       # Location server tracking area code
-cell_id=1                   # Location server cell ID - determines the mountpoint
+host=192.0.2.1                  # Location server hostname or IP
+port=1000                       # Location server port
+mcc=001                         # Location server mobile country code
+mnc=1                           # Location server mobile network code
+tac=1                           # Location server tracking area code
+cell_id=1                       # Location server cell ID - determines the mountpoint
 ```
 
 ### 4. Deploy systemd services
