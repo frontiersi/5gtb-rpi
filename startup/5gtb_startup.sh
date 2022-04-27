@@ -27,8 +27,8 @@ if [ ${mode} = "positioning" ]; then
     echo "Starting positioning mode"
     
     # Configure serial port
-    echo "Configuring serial port ${serial_port}"
-    stty -F ${serial_port} ${baud_rate} -echo
+    echo "Configuring serial port ${uart_serial_port}"
+    stty -F ${uart_serial_port} ${baud_rate} -echo
 
     # Stream RTCM to serial port/file, log stdout to file
     echo "Executing SUPL LPP Client"
@@ -36,19 +36,30 @@ if [ ${mode} = "positioning" ]; then
         "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
     supl-lpp-client \
         -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
-        -d ${serial_port} -r ${baud_rate} \
+        -d ${uart_serial_port} -r ${baud_rate} \
         -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
         # Prepend UTC timestamps to log file
         while IFS= read -r line; do 
             printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
         done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
 
+    # If set, save SBF to file
+    if [ ! -z ${usb_serial_port} ]; then
+        echo "Executing str2str on ${usb_serial_port}"
+        echo "Logging SBF to" \
+            "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.sbf"
+        stty -F ${usb_serial_port} ${baud_rate} -echo
+
+        str2str -in serial://${usb_serial_port##*/}:${baud_rate} \
+            -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.sbf &
+    fi
+
     # Save NMEA to file, start TCP server
-    echo "Execute str2str on ${serial_port}"
+    echo "Executing str2str on ${uart_serial_port}"
     echo "Logging NMEA to" \
         "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea"
     # Remove '/dev/' from the serial_port variable
-    str2str -in serial://${serial_port##*/}:${baud_rate} \
+    str2str -in serial://${uart_serial_port##*/}:${baud_rate} \
         -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea \
         -out tcpsvr://:29471
         # Can add another output here if required
@@ -59,17 +70,17 @@ if [ ${mode} = "correction" ]; then
     echo "Starting correction mode"
 
     # Configure serial port
-    echo "Configuring serial port ${serial_port}"
-    stty -F ${serial_port} ${baud_rate} -echo
+    echo "Configuring serial port ${uart_serial_port}"
+    stty -F ${uart_serial_port} ${baud_rate} -echo
 
     # Execute supl client, save RTCM to file and stream RTCM to serial port
     echo "Executing SUPL LPP Client"
-    echo "Streaming RTCM to ${serial_port}"
+    echo "Streaming RTCM to ${uart_serial_port}"
     echo "Logging RTCM to" \
         "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
     supl-lpp-client \
         -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
-        -d ${serial_port} -r ${baud_rate} \
+        -d ${uart_serial_port} -r ${baud_rate} \
         -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
         # Prepend UTC timestamps to log file
         while IFS= read -r line; do 
