@@ -14,9 +14,6 @@ trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 # Get this scripts absolute path
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 
-# Make the data output directory if it doesn't exist
-mkdir -p $HOME/output
-
 # Get variables from config file
 source ${SCRIPT_DIR}/../config.cfg
 
