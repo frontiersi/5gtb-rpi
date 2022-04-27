@@ -134,6 +134,15 @@ NMEA (`.nmea`) and RTCM (`.rtcm`) files are named with an ISO time date format (
 
 ---
 
+## Diagnostic Scripts
+
+Diagnostic scripts are located in the `scripts/` folder and include the following:
+
+1. `ping_test.sh`: Pings the Google DNS every 200ms and logs to file in the [Output Directory](#output-directory).
+2. `temp_test.sh`: Querys the Raspberry Pi temperature every second and logs to file in the [Output Directory](#output-directory).
+
+---
+
 ## Troubleshooting
 
 ### Accessing Logs
