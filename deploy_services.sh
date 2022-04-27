@@ -2,11 +2,11 @@
 #
 # Deploy systemd services on the 5G Testbed RaspberryPi.
 
-# Get variables from config file
-source config.cfg
-
 # Get this scripts absolute path
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+# Get variables from config file
+source ${SCRIPT_DIR}/config.cfg
 
 # Check if the services are already active and disable if they are
 if (systemctl -q is-active wait-for-network.service) || (systemctl -q is-active 5gtb-daemon.service); then
@@ -26,7 +26,7 @@ sudo cp $SCRIPT_DIR/services/wait-for-network.service /lib/systemd/system/
 
 # Write username into the absolute path of the startup script in the service
 echo "Writing username into services..."
-sudo sed -i "s/<USER>/$USER/g" /lib/systemd/system/5gtb-daemon.service
+sudo sed -i "s/<USER>/${user}/g" /lib/systemd/system/5gtb-daemon.service
 
 # Restart systemd-daemon
 echo "Reloading systemd daemon..."
