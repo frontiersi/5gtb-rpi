@@ -22,6 +22,11 @@ if !([ ${mode} = "positioning" ] || [ ${mode} = "correction" ]) ; then
     echo "Invalid mode"
 fi
 
+# Check that correcetion type is correctly formatted
+if !([ ${correction_type} = "osr" ] || [ ${correction_type} = "ssr" ]) ; then
+    echo "Invalid positioning type"
+fi
+
 # Positioning mode
 if [ ${mode} = "positioning" ]; then
     echo "Starting positioning mode"
@@ -30,18 +35,52 @@ if [ ${mode} = "positioning" ]; then
     echo "Configuring serial port ${uart_serial_port}"
     stty -F ${uart_serial_port} ${baud_rate} -echo
 
-    # Stream RTCM to serial port/file, log stdout to file
-    echo "Executing SUPL LPP Client"
-    echo "Logging RTCM to" \
-        "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
-    supl-lpp-client \
-        -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
-        -d ${uart_serial_port} -r ${baud_rate} \
-        -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
-        # Prepend UTC timestamps to log file
-        while IFS= read -r line; do 
-            printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
-        done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
+    # For OSR corrections direct RTCM corrections from the SUPL client to the GNSS HAT
+    if [ ${correction_type} = "osr" ]; then
+        # Stream RTCM to serial port/file, log stdout to file
+        echo "Executing SUPL LPP Client"
+        echo "Logging RTCM to" \
+            "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
+        supl-lpp-client \
+            -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
+            -d ${uart_serial_port##*/} -r ${baud_rate} \
+            -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
+            # Prepend UTC timestamps to log file
+            while IFS= read -r line; do 
+                printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
+            done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
+    fi
+
+    # For SSR corrections direct RTCM corrections from the SUPL client to a TCP server
+    if [ ${correction_type} = "ssr" ]; then
+
+        # Deploy Docker container with GMV's Positioning Engine
+        # Within the Docker entrypoint, a RTKLIB TCP server is instantiated that
+        # takes the SUPL Client's RTCM as input and outputs them to the GMV PE
+        echo "Executing Positioning Engine"
+        docker run -itd --rm -v /home/pi/5gtb-pe/Docker_5GTB/:/opt/magic/RT_PE \
+            -p 19500:19500 -p 60001:60001 --device=/dev/ttyAMA0 \
+            --name PE_AUS_5GTB rtpe_aus:latest &
+
+        # Execute supl client, save RTCM to file and stream RTCM to TCP Server
+        echo "Executing SUPL LPP Client"
+        echo "Logging RTCM to" \
+            "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
+        supl-lpp-client \
+            -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
+            -k 127.0.0.1 -o 60001 \
+            -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
+            # Prepend UTC timestamps to log file
+            while IFS= read -r line; do
+                printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
+            done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
+
+        # Log NMEA to file
+        echo "Logging NMEA to" \
+            "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea"
+        str2str -in tcpcli://127.0.0.1:19500 \
+            -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea
+    fi
 
     # If set, save SBF to file
     if [ ! -z ${usb_serial_port} ]; then
@@ -80,10 +119,10 @@ if [ ${mode} = "correction" ]; then
         "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm"
     supl-lpp-client \
         -h ${host} -p ${port} -c ${mcc} -n ${mnc} -t ${tac} -i ${cell_id} \
-        -d ${uart_serial_port} -r ${baud_rate} \
+        -d ${uart_serial_port##*/} -r ${baud_rate} \
         -x ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.rtcm |
         # Prepend UTC timestamps to log file
-        while IFS= read -r line; do 
+        while IFS= read -r line; do
             printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
         done | tee ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log
 fi
