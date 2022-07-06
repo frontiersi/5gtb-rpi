@@ -1,6 +1,14 @@
 #!/bin/bash
 #
-# Ping Google DNS (8.8.8.8) every 200ms, log to file
+# Ping a host every 200ms, log to file
+
+while getopts ":h:" o; do
+    case "${o}" in
+        h)
+            h=${OPTARG}
+            ;;
+    esac
+done
 
 # Get this scripts absolute path
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
@@ -9,10 +17,9 @@ SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 source ${SCRIPT_DIR}/../config.cfg
 
 FILENAME=`date +"%Y%m%d-%H%M%S"`-$HOSTNAME-ping.log
-HOST="8.8.8.8"
 
 trap '' INT
-ping $HOST -i 0.2 | while read pong;
+ping $h -i 0.2 | while read pong;
 do
     echo "$(date +'%Y%m%d-%H%M%S.%3N') | $pong";
 done | tee ${output_dir%/}/$FILENAME
