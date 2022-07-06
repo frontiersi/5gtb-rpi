@@ -31,7 +31,7 @@ fi
 
 # Positioning mode
 if [ ${mode} = "positioning" ]; then
-    echo "Starting positioning mode"
+    echo "Starting Positioning Mode [${correction_type}]"
     
     # Configure serial port
     echo "Configuring serial port ${uart_serial_port}"
@@ -108,7 +108,7 @@ fi
 
 # Correction mode
 if [ ${mode} = "correction" ]; then
-    echo "Starting correction mode"
+    echo "Starting Correction Mode [${correction_type}]"
 
     # Configure serial port
     echo "Configuring serial port ${uart_serial_port}"
