@@ -51,6 +51,16 @@ if [ ${mode} = "positioning" ]; then
             while IFS= read -r line; do 
                 printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$line";
             done > ${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.log &
+
+        # Save NMEA to file, start TCP server
+        echo "Executing str2str on ${uart_serial_port}"
+        echo "Logging NMEA to" \
+            "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea"
+        # Remove '/dev/' from the serial_port variable
+        str2str -in serial://${uart_serial_port##*/}:${baud_rate} \
+            -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea \
+            -out tcpsvr://:29471
+            # Can add another output here if required
     fi
 
     # For SSR corrections direct RTCM corrections from the SUPL client to a TCP server
@@ -94,16 +104,6 @@ if [ ${mode} = "positioning" ]; then
         str2str -in serial://${usb_serial_port##*/}:${baud_rate} \
             -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.sbf &
     fi
-
-    # Save NMEA to file, start TCP server
-    echo "Executing str2str on ${uart_serial_port}"
-    echo "Logging NMEA to" \
-        "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea"
-    # Remove '/dev/' from the serial_port variable
-    str2str -in serial://${uart_serial_port##*/}:${baud_rate} \
-        -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.nmea \
-        -out tcpsvr://:29471
-        # Can add another output here if required
 fi
 
 # Correction mode
