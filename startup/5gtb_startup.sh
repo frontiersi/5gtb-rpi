@@ -8,8 +8,10 @@ export TZ=Australia/Sydney
 # Kill script if a command returns a non-zero status (error)
 set -e
 
-# Kill child processes on exit
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+# Stop docker container and kill child processes on exit
+trap "docker ps -q --filter "name=PE_AUS_5GTB" | grep -q . && \
+      docker stop PE_AUS_5GTB && trap - SIGTERM && \
+      kill -- -$$" SIGINT SIGTERM EXIT
 
 # Get this scripts absolute path
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
