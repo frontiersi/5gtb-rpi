@@ -71,6 +71,7 @@ if [ ${mode} = "positioning" ]; then
         # takes the SUPL Client's RTCM as input and outputs them to the GMV PE
         echo "Executing Positioning Engine"
         docker run -itd --rm -v /home/pi/5gtb-pe/Docker_5GTB/:/opt/magic/RT_PE \
+            -v ${output_dir}:/opt/usb \
             -p 19500:19500 -p 60001:60001 --device=/dev/ttyAMA0 \
             --name PE_AUS_5GTB rtpe_aus:latest &
 
