@@ -25,11 +25,13 @@ The scripts require `stty` from coreutils and `str2str` from RTKLIB:
 sudo apt install coreutils rtklib
 ```
 
-The startup scripts also require the [SUPL LPP Client](https://github.com/frontiersi/supl-lpp-client) to connect to a location server and generate RTCM from LPP messages.
+For OSR positioning, the startup scripts require the [SUPL LPP Client](https://github.com/frontiersi/supl-lpp-client) to connect to a location server and generate RTCM from LPP messages.
 
 Install it by following the instructions in the [GitHub Repository](https://github.com/frontiersi/supl-lpp-client/tree/main#installation).
 
 Ensure that the SUPL LPP Client can be executed from anywhere.
+
+For SSR positioning, the script requires the GMV Positioning Engine (PE) docker image. These scripts don't alter the PE's config, so ensure that it is correctly configured.
 
 ### 3. Update config file
 
@@ -52,25 +54,34 @@ user=pi                     # Username for executing as user in service
 
 #### Script mode
 
-Determines how the script should operate given the hardware configuration, there are two modes:
+Determines how the script should operate given the hardware configuration, there are two modes, that can use two types of corrections:
 
-1. `positioning`: Executes the SUPL LPP Client which outputs RTCM corrections to the serial port and a file, and logs NMEA from the serial port to a file and streams to a TCP server. Use when a RaspberryPi GNSS HAT is connected.
-2. `correction`: Executes the SUPL LPP Client which outputs RTCM corrections to a serial port, and saves output RTCM messages to a file. Use when an independent GNSS receiver is connected by serial port.
+Modes:
+
+1. `positioning`: Outputs positioning solutions in NMEA format to file and TCP server. Use when a RaspberryPi GNSS HAT is connected.
+2. `correction`: Outputs RTCM corrections to a file and serial. Use when an independent GNSS receiver is connected by serial port.
+
+Corrections:
+
+1. `osr`: Observation Space Representation correction data is used. In `positioning` mode a GNSS HAT is used to compute positions.
+2. `ssr`: State Space Representation correction data is used. In `positioning` mode the GMV PE is used to compute positions.
 
 ```text
 # Script mode
 mode=positioning                # Operation mode (positioning or correction)
+correction_type=osr             # The type of corrections to use (osr or ssr)
 ```
 
 #### GNSS Device
 
-Determines the GNSS device to stream RTCM to, and log NMEA from (if in `positioning` mode). An optional USB serial port is also provided for SBF (raw GNSS data) logging, leave blank if not required.
+Determines the GNSS device to stream RTCM to, and log NMEA from (if in `positioning` mode and `osr` correction type). Or defines the directory for the GMV PE (if in `positioning` mode and `ssr` corretion type). An optional USB serial port is also provided for SBF (raw GNSS data) logging, comment out if not required.
 
 ```text
-# GNSS Device                   
-uart_serial_port=/dev/ttyAMA0   # GNSS device UART serial port
-usb_serial_port=/dev/ttyACM0    # (Optional) GNSS device USB serial port
-baud_rate=115200                # Device baud rate
+# GNSS Device
+uart_serial_port=/dev/ttyAMA0    # GNSS device UART serial port for NMEA/RTCM
+usb_serial_port=/dev/ttyACM0     # (Optional) GNSS device USB serial port for SBF
+baud_rate=115200                 # Device baud rate
+gmv_pe_dir=/home/pi/5gtb-pe-lpp/ # GMV Positioning Engine directory
 ```
 
 #### Output Directory
@@ -127,7 +138,7 @@ $HOME/5gtb-rpi/startup/5gtb_startup.sh
 
 NMEA (`.nmea`) and RTCM (`.rtcm`) files logged by the services can be found in the folder set in the [Output Directory](#output-directory) config.
 
-When the services are running, NMEA messages are also streamed over a TCP server on port `29471`. The stream can be interfaced over the net with `netcat`, `gpsd`, or similar.
+When the services are running, with the `osr` correction type, NMEA messages are also streamed over a TCP server on port `29471`. With the `ssr` correction type, proprietary GMV NMEA is streamed over a TCP server on port `19500`. The stream can be interfaced over the net with `netcat`, `gpsd`, or similar.
 
 ### Data Timezone
 
