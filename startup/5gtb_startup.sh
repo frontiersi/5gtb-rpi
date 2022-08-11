@@ -16,7 +16,7 @@ source ${SCRIPT_DIR}/../config.cfg
 
 # Stop docker container and kill child processes on exit
 trap "trap - SIGTERM && \
-      docker-compose -f ${gmv_pe_dir%/}/docker-compose.yml stop && \
+      docker-compose -f ${gmv_pe_dir%/}/docker-compose.yml down && \
       kill -- -$$" SIGINT SIGTERM EXIT
 
 # Check that mode is correctly formatted
@@ -39,7 +39,6 @@ if [ ${mode} = "positioning" ]; then
         echo "Executing str2str on ${usb_serial_port}"
         echo "Logging SBF to" \
             "${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.sbf"
-
         str2str -in serial://${usb_serial_port##*/}:${baud_rate} \
             -out file://${output_dir%/}/`date +"%Y%m%d-%H%M%S"`-$HOSTNAME.sbf &
     fi
